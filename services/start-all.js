@@ -16,6 +16,7 @@ const SERVICOS = [
   ['tributario', 3004],
   ['pedidos', 3005],
   ['marketplaces', 3006],
+  ['usuarios', 3007],
   ['gateway', 3000],
 ];
 
@@ -41,6 +42,7 @@ console.log(`
 │  tributario .......................... :3004      │
 │  pedidos ............................. :3005      │
 │  marketplaces ........................ :3006      │
+│  usuarios (auth ERP) ................. :3007      │
 │                                                   │
 │  Loja: sirva a raiz do repositório por HTTP       │
 │    npx serve .   (ou python3 -m http.server 8080) │

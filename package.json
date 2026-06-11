@@ -11,6 +11,7 @@
     "servico:tributario": "node services/tributario/server.js",
     "servico:pedidos": "node services/pedidos/server.js",
     "servico:marketplaces": "node services/marketplaces/server.js",
+    "servico:usuarios": "node services/usuarios/server.js",
     "servico:gateway": "node services/gateway/server.js",
     "loja": "python3 -m http.server 8080"
   },

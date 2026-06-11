@@ -32,6 +32,7 @@ E-commerce com visual **simples e tecnológico** (tema escuro), integrado ao [Va
 | **estoque** | 3003 | Saldo por SKU + movimentações; baixa em lote tudo-ou-nada; sync com o ERP | `services/estoque/data/db.json` |
 | **tributario** | 3004 | Motor tributário: ICMS (interno/interestadual por UF), IPI (por NCM), PIS e COFINS | — (stateless) |
 | **pedidos** | 3005 | Checkout: baixa estoque → calcula impostos → grava o pedido; fila de exportação p/ ERP | `services/pedidos/data/db.json` |
+| **usuarios** | 3007 | Autenticação do ERP: senhas scrypt, sessões com token/expiração, força bruta, CRUD de usuários e permissões | `services/usuarios/data/db.json` |
 | **marketplaces** | 3006 | Canais externos (Mercado Livre, Shopee, Amazon, Magalu): anúncios por canal, webhook/simulador de pedidos com comissão | `services/marketplaces/data/db.json` |
 
 Cada serviço usa apenas `services/_lib/micro.js` (HTTP + roteador + persistência em JSON, ~150 linhas). Para implantar um serviço sozinho, copie a pasta dele + o `_lib`.
@@ -46,7 +47,7 @@ Cada serviço usa apenas `services/_lib/micro.js` (HTTP + roteador + persistênc
 docker compose up --build
 ```
 
-Sobe **7 containers**: a loja (nginx) + gateway + 5 microserviços, cada um na sua imagem.
+Sobe **9 containers**: a loja (nginx) + gateway + 7 microserviços, cada um na sua imagem.
 
 - Loja: `http://localhost:8080`
 - Gateway: `http://localhost:3000` (único serviço exposto ao navegador)
@@ -65,7 +66,7 @@ docker run -p 3004:3004 vava-tributario
 Requisitos: **Node.js 18+** (sem `npm install` — zero dependências).
 
 ```bash
-# 1. Sobe os 6 microserviços (gateway + 5 módulos)
+# 1. Sobe os 8 processos (gateway + 7 serviços)
 npm start          # ou: node services/start-all.js
 
 # 2. Em outro terminal, sirva a loja por HTTP
@@ -120,9 +121,13 @@ curl -X POST http://localhost:3000/api/pedidos/pedidos \
   -H 'Content-Type: application/json' \
   -d '{"cliente":{"nome":"Ana","uf":"BA"},"itens":[{"sku":"SKU-0011","nome":"Smartphone X","ncm":"8517.13.00","quantidade":1,"precoUnitario":2200}]}'
 
+# login do ERP (necessário para rotas administrativas: sync, canais, anúncios...)
+TOKEN=$(curl -s -X POST http://localhost:3000/api/usuarios/auth/login \
+  -H 'Content-Type: application/json' -d '{"email":"admin@vava.com","senha":"admin123"}' | python3 -c 'import json,sys; print(json.load(sys.stdin)["token"])')
+
 # marketplaces: conectar canal, publicar anúncios e receber um pedido
-curl -X POST http://localhost:3000/api/marketplaces/canais/mercado-livre/conectar -H 'Content-Type: application/json' -d '{}'
-curl -X POST http://localhost:3000/api/marketplaces/anuncios/publicar -H 'Content-Type: application/json' -d '{}'
+curl -X POST http://localhost:3000/api/marketplaces/canais/mercado-livre/conectar -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{}'
+curl -X POST http://localhost:3000/api/marketplaces/anuncios/publicar -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{}'
 curl -X POST http://localhost:3000/api/marketplaces/webhooks/mercado-livre \
   -H 'Content-Type: application/json' \
   -d '{"comprador":{"nome":"Maria","uf":"RJ"},"itens":[{"sku":"SKU-0012","quantidade":1}]}'
@@ -171,6 +176,10 @@ node scripts/importar-painel.js painel.html --salvar-seed
 ```
 
 O painel não traz preços — os produtos entram com preço 0 e ficam "indisponíveis" na loja até serem precificados/estocados no ERP (Integração → **Importar catálogo da loja**, depois Produtos).
+
+## 🔐 Produção
+
+Senhas com scrypt, sessões com token, rotas administrativas autenticadas no gateway, CORS/rate limit configuráveis e webhook com segredo. Checklist completo: [PRODUCAO.md](PRODUCAO.md).
 
 ## ⚠️ Observações
 

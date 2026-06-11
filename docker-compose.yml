@@ -11,6 +11,7 @@
 
 services:
   loja:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile.loja
@@ -20,6 +21,7 @@ services:
       - gateway
 
   gateway:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: services/Dockerfile
@@ -33,6 +35,10 @@ services:
       TRIBUTARIO_URL: http://tributario:3004
       PEDIDOS_URL: http://pedidos:3005
       MARKETPLACES_URL: http://marketplaces:3006
+      USUARIOS_URL: http://usuarios:3007
+      # Produção: restrinja às origens reais (https://loja.suaempresa.com,...)
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
+      RATE_LIMIT_RPM: ${RATE_LIMIT_RPM:-300}
     depends_on:
       - clientes
       - catalogo
@@ -40,8 +46,10 @@ services:
       - tributario
       - pedidos
       - marketplaces
+      - usuarios
 
   clientes:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: services/Dockerfile
@@ -50,6 +58,7 @@ services:
       - clientes-data:/app/services/clientes/data
 
   catalogo:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: services/Dockerfile
@@ -58,6 +67,7 @@ services:
       - catalogo-data:/app/services/catalogo/data
 
   estoque:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: services/Dockerfile
@@ -67,12 +77,14 @@ services:
 
   tributario:
     # Stateless: só calcula impostos, não tem volume.
+    restart: unless-stopped
     build:
       context: .
       dockerfile: services/Dockerfile
       args: { SERVICO: tributario, PORTA: "3004" }
 
   pedidos:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: services/Dockerfile
@@ -87,6 +99,7 @@ services:
       - tributario
 
   marketplaces:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: services/Dockerfile
@@ -94,11 +107,26 @@ services:
     environment:
       CATALOGO_URL: http://catalogo:3002
       PEDIDOS_URL: http://pedidos:3005
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-}
     volumes:
       - marketplaces-data:/app/services/marketplaces/data
     depends_on:
       - catalogo
       - pedidos
+
+  usuarios:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args: { SERVICO: usuarios, PORTA: "3007" }
+    environment:
+      # Produção: defina credenciais próprias no .env / secrets
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@vava.com}
+      ADMIN_SENHA: ${ADMIN_SENHA:-admin123}
+      SESSAO_HORAS: ${SESSAO_HORAS:-8}
+    volumes:
+      - usuarios-data:/app/services/usuarios/data
 
 volumes:
   clientes-data:
@@ -106,3 +134,4 @@ volumes:
   estoque-data:
   pedidos-data:
   marketplaces-data:
+  usuarios-data:

@@ -187,12 +187,18 @@ createService({
     },
 
     // ----- Entrada de pedidos ----------------------------------------------
-    // Webhook (didático): o marketplace chamaria esta rota a cada venda.
+    // Webhook: o marketplace chama esta rota a cada venda.
+    // Em produção, defina WEBHOOK_SECRET — o canal precisa enviar o header
+    // `x-webhook-token` com o mesmo valor.
     // Payload: { comprador: { nome, uf, ... }, itens: [{ sku, quantidade }] }
     {
       method: 'POST',
       path: '/webhooks/:canal',
-      handler: async ({ params, body }) => {
+      handler: async ({ params, body, req }) => {
+        const segredo = process.env.WEBHOOK_SECRET;
+        if (segredo && req.headers['x-webhook-token'] !== segredo) {
+          throw new ApiError(401, 'Webhook não autorizado (x-webhook-token inválido).');
+        }
         const canal = canalConectado(params.canal);
         const pedido = await registrarPedidoDoCanal(canal, body);
         return { status: 201, body: pedido };

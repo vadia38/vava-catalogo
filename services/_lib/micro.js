@@ -16,6 +16,38 @@ export const uid = (prefix = '') =>
 export const sha256 = (s) => crypto.createHash('sha256').update(String(s)).digest('hex');
 
 // ---------------------------------------------------------------------------
+// Senhas: scrypt com salt aleatório (formato "scrypt$salt$hash").
+// verificarSenha aceita também hashes legados em SHA-256 puro (64 hex) para
+// migração transparente — o chamador deve regravar com hashSenha após validar.
+// ---------------------------------------------------------------------------
+export function hashSenha(senha) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(String(senha), salt, 64).toString('hex');
+  return `scrypt$${salt}$${hash}`;
+}
+
+export function verificarSenha(senha, armazenado) {
+  if (!armazenado) return false;
+  if (armazenado.startsWith('scrypt$')) {
+    const [, salt, hash] = armazenado.split('$');
+    const calc = crypto.scryptSync(String(senha), salt, 64).toString('hex');
+    return crypto.timingSafeEqual(Buffer.from(calc, 'hex'), Buffer.from(hash, 'hex'));
+  }
+  // legado: SHA-256 sem salt (didático)
+  return sha256(senha) === armazenado;
+}
+
+export const ehHashLegado = (armazenado) => !!armazenado && !armazenado.startsWith('scrypt$');
+
+export const tokenAleatorio = () => crypto.randomBytes(32).toString('hex');
+
+// Extrai o Bearer token do cabeçalho Authorization.
+export function lerToken(req) {
+  const m = String(req.headers.authorization || '').match(/^Bearer\s+(.+)$/i);
+  return m ? m[1] : null;
+}
+
+// ---------------------------------------------------------------------------
 // Persistência: um arquivo JSON por serviço (data/db.json).
 // ---------------------------------------------------------------------------
 export function jsonDB(dir, seed = {}) {

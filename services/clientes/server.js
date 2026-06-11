@@ -8,7 +8,7 @@
 
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createService, jsonDB, uid, sha256, ApiError } from '../_lib/micro.js';
+import { createService, jsonDB, uid, ApiError, hashSenha, verificarSenha, ehHashLegado } from '../_lib/micro.js';
 
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data');
 const { data: db, save } = jsonDB(dir, { clientes: [] });
@@ -135,7 +135,7 @@ createService({
           cidade: body.cidade || cliente.cidade || '',
           uf: body.uf || cliente.uf || '',
           origem: cliente.origem || 'ecommerce',
-          senhaHash: sha256(body.senha),
+          senhaHash: hashSenha(body.senha),
         });
         if (!existente) db.clientes.push(cliente);
         save();
@@ -149,8 +149,13 @@ createService({
         const c = db.clientes.find(
           (x) => x.email && x.email.toLowerCase() === String(body.email || '').toLowerCase()
         );
-        if (!c || !c.senhaHash || c.senhaHash !== sha256(body.senha || '')) {
+        if (!c || !c.senhaHash || !verificarSenha(body.senha || '', c.senhaHash)) {
           throw new ApiError(401, 'E-mail ou senha inválidos.');
+        }
+        // migra hash legado (SHA-256 sem salt) para scrypt no primeiro login
+        if (ehHashLegado(c.senhaHash)) {
+          c.senhaHash = hashSenha(body.senha);
+          save();
         }
         return publico(c);
       },
