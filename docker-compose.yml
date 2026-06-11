@@ -16,7 +16,8 @@ services:
       context: .
       dockerfile: Dockerfile.loja
     ports:
-      - "8080:80"
+      # Porta ocupada? Suba com outra: LOJA_PORT=8090 docker compose up -d
+      - "${LOJA_PORT:-8080}:80"
     depends_on:
       - gateway
 
@@ -27,7 +28,7 @@ services:
       dockerfile: services/Dockerfile
       args: { SERVICO: gateway, PORTA: "3000" }
     ports:
-      - "3000:3000"
+      - "${GATEWAY_PORT:-3000}:3000"
     environment:
       CLIENTES_URL: http://clientes:3001
       CATALOGO_URL: http://catalogo:3002
