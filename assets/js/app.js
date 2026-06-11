@@ -81,7 +81,7 @@ function buildShell() {
 
   contentEl = el('main', { class: 'page' });
   root.appendChild(contentEl);
-  root.appendChild(el('footer', { class: 'footer', text: 'Vava Store — e-commerce didático integrado ao Vava ERP · clientes :3001 · catálogo :3002 · estoque :3003 · tributário :3004 · pedidos :3005' }));
+  root.appendChild(el('footer', { class: 'footer', text: 'Vava Store — e-commerce didático integrado ao Vava ERP · clientes :3001 · catálogo :3002 · estoque :3003 · tributário :3004 · pedidos :3005 · marketplaces :3006' }));
   atualizarBadge();
   atualizarConn();
 }

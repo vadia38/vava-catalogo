@@ -32,12 +32,14 @@ services:
       ESTOQUE_URL: http://estoque:3003
       TRIBUTARIO_URL: http://tributario:3004
       PEDIDOS_URL: http://pedidos:3005
+      MARKETPLACES_URL: http://marketplaces:3006
     depends_on:
       - clientes
       - catalogo
       - estoque
       - tributario
       - pedidos
+      - marketplaces
 
   clientes:
     build:
@@ -84,8 +86,23 @@ services:
       - estoque
       - tributario
 
+  marketplaces:
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args: { SERVICO: marketplaces, PORTA: "3006" }
+    environment:
+      CATALOGO_URL: http://catalogo:3002
+      PEDIDOS_URL: http://pedidos:3005
+    volumes:
+      - marketplaces-data:/app/services/marketplaces/data
+    depends_on:
+      - catalogo
+      - pedidos
+
 volumes:
   clientes-data:
   catalogo-data:
   estoque-data:
   pedidos-data:
+  marketplaces-data:

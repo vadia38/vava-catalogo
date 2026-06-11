@@ -32,6 +32,7 @@ createService({
         let lista = db.pedidos;
         if (query.get('clienteId')) lista = lista.filter((p) => p.cliente?.id === query.get('clienteId'));
         if (query.get('status')) lista = lista.filter((p) => p.status === query.get('status'));
+        if (query.get('canal')) lista = lista.filter((p) => (p.canal || 'loja-virtual') === query.get('canal'));
         if (query.get('pendentesErp') === 'true') lista = lista.filter((p) => !p.exportadoErp && p.status === 'confirmado');
         return [...lista].reverse();
       },
@@ -55,12 +56,17 @@ createService({
         const ufDestino = body.cliente.uf || body.ufDestino;
         if (!ufDestino) throw new ApiError(400, 'Informe a UF de entrega para o cálculo dos impostos.');
 
+        // Canal de venda: 'loja-virtual' (padrão) ou um marketplace
+        // (mercado-livre, shopee, ...) — informado pelo serviço de marketplaces.
+        const canal = body.canal || 'loja-virtual';
+        const prefixo = canal === 'loja-virtual' ? 'EC' : canal.slice(0, 4).toUpperCase().replace('-', '');
+
         // 1) Baixa de estoque (tudo-ou-nada).
-        const numero = `EC-${Date.now().toString(36).toUpperCase()}`;
+        const numero = `${prefixo}-${Date.now().toString(36).toUpperCase()}`;
         let baixa;
         try {
           baixa = await callService(ESTOQUE_URL, 'POST', '/movimentos/lote', {
-            origem: 'ecommerce',
+            origem: canal,
             referencia: numero,
             itens: itens.map((i) => ({ sku: i.sku, tipo: 'saida', quantidade: i.quantidade })),
           });
@@ -78,7 +84,7 @@ createService({
           });
         } catch (err) {
           await callService(ESTOQUE_URL, 'POST', '/movimentos/lote', {
-            origem: 'ecommerce',
+            origem: canal,
             referencia: `${numero}-ESTORNO`,
             itens: itens.map((i) => ({ sku: i.sku, tipo: 'entrada', quantidade: i.quantidade })),
           }).catch(() => {});
@@ -91,6 +97,8 @@ createService({
           id: uid('ped_'),
           numero,
           status: 'confirmado',
+          canal,
+          comissao: body.comissao || null, // { percentual, valor } quando vem de marketplace
           cliente: body.cliente,
           ufOrigem: UF_ORIGEM,
           ufDestino,

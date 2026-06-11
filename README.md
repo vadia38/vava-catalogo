@@ -14,13 +14,14 @@ E-commerce com visual **simples e tecnológico** (tema escuro), integrado ao [Va
                │                                      │
                └──────────► API GATEWAY :3000 ◄───────┘
                                  │  (roteia /api/<serviço>/*)
-        ┌──────────┬─────────────┼──────────────┬──────────┐
-        ▼          ▼             ▼              ▼          ▼
-    CLIENTES    CATÁLOGO      ESTOQUE      TRIBUTÁRIO   PEDIDOS
-      :3001       :3002        :3003          :3004       :3005
-    cadastro    produtos      saldo único   ICMS · IPI   checkout:
-    unificado   da loja       por SKU       PIS · COFINS orquestra
-    loja + ERP  (sync c/ ERP) (sync c/ ERP) por NCM/UF   estoque+impostos
+        ┌──────────┬─────────────┼──────────────┬──────────┬─────────────┐
+        ▼          ▼             ▼              ▼          ▼             ▼
+    CLIENTES    CATÁLOGO      ESTOQUE      TRIBUTÁRIO   PEDIDOS    MARKETPLACES
+      :3001       :3002        :3003          :3004       :3005        :3006
+    cadastro    produtos      saldo único   ICMS · IPI   checkout:   Meli·Shopee
+    unificado   da loja       por SKU       PIS · COFINS orquestra   Amazon·Magalu
+    loja + ERP  (sync c/ ERP) (sync c/ ERP) por NCM/UF   estoque+    anúncios e
+                                                         impostos    pedidos/canal
 ```
 
 | Serviço | Porta | Responsabilidade | Banco |
@@ -31,6 +32,7 @@ E-commerce com visual **simples e tecnológico** (tema escuro), integrado ao [Va
 | **estoque** | 3003 | Saldo por SKU + movimentações; baixa em lote tudo-ou-nada; sync com o ERP | `services/estoque/data/db.json` |
 | **tributario** | 3004 | Motor tributário: ICMS (interno/interestadual por UF), IPI (por NCM), PIS e COFINS | — (stateless) |
 | **pedidos** | 3005 | Checkout: baixa estoque → calcula impostos → grava o pedido; fila de exportação p/ ERP | `services/pedidos/data/db.json` |
+| **marketplaces** | 3006 | Canais externos (Mercado Livre, Shopee, Amazon, Magalu): anúncios por canal, webhook/simulador de pedidos com comissão | `services/marketplaces/data/db.json` |
 
 Cada serviço usa apenas `services/_lib/micro.js` (HTTP + roteador + persistência em JSON, ~150 linhas). Para implantar um serviço sozinho, copie a pasta dele + o `_lib`.
 
@@ -117,6 +119,13 @@ curl -X POST http://localhost:3000/api/tributario/calcular \
 curl -X POST http://localhost:3000/api/pedidos/pedidos \
   -H 'Content-Type: application/json' \
   -d '{"cliente":{"nome":"Ana","uf":"BA"},"itens":[{"sku":"SKU-0011","nome":"Smartphone X","ncm":"8517.13.00","quantidade":1,"precoUnitario":2200}]}'
+
+# marketplaces: conectar canal, publicar anúncios e receber um pedido
+curl -X POST http://localhost:3000/api/marketplaces/canais/mercado-livre/conectar -H 'Content-Type: application/json' -d '{}'
+curl -X POST http://localhost:3000/api/marketplaces/anuncios/publicar -H 'Content-Type: application/json' -d '{}'
+curl -X POST http://localhost:3000/api/marketplaces/webhooks/mercado-livre \
+  -H 'Content-Type: application/json' \
+  -d '{"comprador":{"nome":"Maria","uf":"RJ"},"itens":[{"sku":"SKU-0012","quantidade":1}]}'
 ```
 
 ---
@@ -140,6 +149,7 @@ vava-catalogo/
 │   ├── estoque/server.js      # :3003
 │   ├── tributario/server.js   # :3004
 │   ├── pedidos/server.js      # :3005
+│   ├── marketplaces/server.js # :3006
 │   └── start-all.js           # Sobe tudo em desenvolvimento (sem Docker)
 ├── Dockerfile.loja            # Loja servida pelo nginx
 ├── docker-compose.yml         # Orquestra loja + gateway + 5 serviços

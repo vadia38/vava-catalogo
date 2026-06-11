@@ -7,6 +7,7 @@
 //   /api/estoque/*    → estoque    :3003
 //   /api/tributario/* → tributario :3004
 //   /api/pedidos/*    → pedidos    :3005
+//   /api/marketplaces/* → marketplaces :3006
 //
 // Executar: node services/gateway/server.js
 
@@ -20,6 +21,7 @@ const SERVICOS = {
   estoque: process.env.ESTOQUE_URL || 'http://localhost:3003',
   tributario: process.env.TRIBUTARIO_URL || 'http://localhost:3004',
   pedidos: process.env.PEDIDOS_URL || 'http://localhost:3005',
+  marketplaces: process.env.MARKETPLACES_URL || 'http://localhost:3006',
 };
 
 const server = http.createServer(async (req, res) => {
