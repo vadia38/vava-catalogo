@@ -158,6 +158,20 @@ vava-catalogo/
 
 ---
 
+## 📥 Importar produtos de um Painel de Orçamento
+
+O script `scripts/importar-painel.js` lê um painel HTML exportado (com os dados em `let DEFAULT_P=[...]` — código, referência, nome, categoria, marca e foto) e importa tudo para o catálogo:
+
+```bash
+# importa direto no catálogo em execução (via gateway)
+node scripts/importar-painel.js painel.html
+
+# ou grava como seed permanente: o serviço de catálogo carrega no 1º boot
+node scripts/importar-painel.js painel.html --salvar-seed
+```
+
+O painel não traz preços — os produtos entram com preço 0 e ficam "indisponíveis" na loja até serem precificados/estocados no ERP (Integração → **Importar catálogo da loja**, depois Produtos).
+
 ## ⚠️ Observações
 
 - As tabelas tributárias (ICMS por UF, IPI por capítulo de NCM, PIS/COFINS) são **simplificadas para fins didáticos** e não substituem um motor fiscal homologado.

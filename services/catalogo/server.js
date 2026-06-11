@@ -6,10 +6,12 @@
 // Executar: node services/catalogo/server.js
 
 import path from 'node:path';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createService, jsonDB, uid, ApiError } from '../_lib/micro.js';
 
-const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data');
+const base = path.dirname(fileURLToPath(import.meta.url));
+const dir = path.join(base, 'data');
 
 // Catálogo inicial de demonstração (mesmos produtos do seed do ERP).
 const SEED = {
@@ -31,6 +33,14 @@ const SEED = {
     ativo: true, criadoEm: new Date().toISOString(),
   })),
 };
+
+// Produtos importados de um Painel de Orçamento (scripts/importar-painel.js
+// --salvar-seed). Se o arquivo existir, entra no seed do primeiro boot.
+try {
+  const painel = JSON.parse(fs.readFileSync(path.join(base, 'seed-painel.json'), 'utf8'));
+  SEED.produtos.push(...painel.map((p) => ({ ...p, id: uid('prd_'), criadoEm: new Date().toISOString() })));
+  console.log(`[catalogo] seed-painel.json: +${painel.length} produtos no seed inicial`);
+} catch { /* sem seed do painel */ }
 
 const { data: db, save } = jsonDB(dir, SEED);
 const PORT = Number(process.env.CATALOGO_PORT || 3002);
