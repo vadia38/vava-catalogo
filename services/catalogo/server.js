@@ -116,8 +116,8 @@ createService({
         for (const r of recebidos) {
           if (!r.sku || !r.nome) continue;
           const existente = db.produtos.find((p) => p.sku === r.sku);
-          // O catálogo não guarda custo nem saldo: preço/dados comerciais apenas.
-          const { id, custo, estoque, estoqueMinimo, criadoEm, ...resto } = r;
+          // O catálogo não guarda custo, saldo nem metadados internos do ERP.
+          const { id, custo, estoque, estoqueMinimo, criadoEm, publicadoEcommerce, publicadoEm, ...resto } = r;
           if (existente) {
             Object.assign(existente, resto, { atualizadoEm: new Date().toISOString() });
             atualizados++;

@@ -135,7 +135,9 @@ async function paginaCatalogo() {
       const stockClass = saldo <= 0 ? 'no-stock' : saldo < 10 ? 'low-stock' : 'in-stock';
       const stockText = saldo <= 0 ? 'sem estoque' : saldo < 10 ? `restam ${saldo} un` : `${saldo} em estoque`;
       return el('div', { class: 'card' }, [
-        el('div', { class: 'card-thumb', text: p.emoji || EMOJI_CAT[p.categoria] || '📦' }),
+        p.fotos && p.fotos.length
+          ? el('div', { class: 'card-thumb' }, el('img', { class: 'card-foto', src: p.fotos[0], alt: p.nome }))
+          : el('div', { class: 'card-thumb', text: p.emoji || EMOJI_CAT[p.categoria] || '📦' }),
         el('div', { class: 'card-body' }, [
           el('div', { class: 'card-cat', text: `${p.categoria} · ${p.sku}` }),
           el('div', { class: 'card-name', text: p.nome }),
