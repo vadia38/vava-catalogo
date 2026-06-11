@@ -1,0 +1,11 @@
+# Loja Vava Store — site estático servido pelo nginx.
+# O navegador conversa com o gateway em http://localhost:3000 (porta mapeada
+# no docker-compose), então não há configuração extra aqui.
+
+FROM nginx:alpine
+
+COPY index.html /usr/share/nginx/html/index.html
+COPY assets /usr/share/nginx/html/assets
+
+HEALTHCHECK --interval=10s --timeout=3s --retries=3 \
+  CMD wget -qO- http://localhost:80/ || exit 1

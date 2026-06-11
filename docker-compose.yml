@@ -1,0 +1,91 @@
+# Vava Store — loja + microserviços em containers.
+#
+#   docker compose up --build
+#
+#   Loja ........ http://localhost:8080
+#   Gateway ..... http://localhost:3000  (único serviço exposto ao navegador)
+#
+# Cada microserviço roda no seu próprio container e conversa pelos nomes da
+# rede interna do compose (http://clientes:3001, http://estoque:3003, ...).
+# Os bancos JSON ficam em volumes nomeados — os dados sobrevivem ao recreate.
+
+services:
+  loja:
+    build:
+      context: .
+      dockerfile: Dockerfile.loja
+    ports:
+      - "8080:80"
+    depends_on:
+      - gateway
+
+  gateway:
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args: { SERVICO: gateway, PORTA: "3000" }
+    ports:
+      - "3000:3000"
+    environment:
+      CLIENTES_URL: http://clientes:3001
+      CATALOGO_URL: http://catalogo:3002
+      ESTOQUE_URL: http://estoque:3003
+      TRIBUTARIO_URL: http://tributario:3004
+      PEDIDOS_URL: http://pedidos:3005
+    depends_on:
+      - clientes
+      - catalogo
+      - estoque
+      - tributario
+      - pedidos
+
+  clientes:
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args: { SERVICO: clientes, PORTA: "3001" }
+    volumes:
+      - clientes-data:/app/services/clientes/data
+
+  catalogo:
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args: { SERVICO: catalogo, PORTA: "3002" }
+    volumes:
+      - catalogo-data:/app/services/catalogo/data
+
+  estoque:
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args: { SERVICO: estoque, PORTA: "3003" }
+    volumes:
+      - estoque-data:/app/services/estoque/data
+
+  tributario:
+    # Stateless: só calcula impostos, não tem volume.
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args: { SERVICO: tributario, PORTA: "3004" }
+
+  pedidos:
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args: { SERVICO: pedidos, PORTA: "3005" }
+    environment:
+      ESTOQUE_URL: http://estoque:3003
+      TRIBUTARIO_URL: http://tributario:3004
+    volumes:
+      - pedidos-data:/app/services/pedidos/data
+    depends_on:
+      - estoque
+      - tributario
+
+volumes:
+  clientes-data:
+  catalogo-data:
+  estoque-data:
+  pedidos-data:

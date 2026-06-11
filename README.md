@@ -38,6 +38,28 @@ Cada serviço usa apenas `services/_lib/micro.js` (HTTP + roteador + persistênc
 
 ## 🚀 Como executar
 
+### Opção 1 — Docker (recomendado)
+
+```bash
+docker compose up --build
+```
+
+Sobe **7 containers**: a loja (nginx) + gateway + 5 microserviços, cada um na sua imagem.
+
+- Loja: `http://localhost:8080`
+- Gateway: `http://localhost:3000` (único serviço exposto ao navegador)
+- Os serviços conversam pela rede interna do compose (`http://clientes:3001`, ...)
+- Os bancos JSON ficam em **volumes nomeados** — os dados sobrevivem a `docker compose restart`
+
+Para subir um serviço sozinho:
+
+```bash
+docker build -f services/Dockerfile --build-arg SERVICO=tributario --build-arg PORTA=3004 -t vava-tributario .
+docker run -p 3004:3004 vava-tributario
+```
+
+### Opção 2 — Node.js direto
+
 Requisitos: **Node.js 18+** (sem `npm install` — zero dependências).
 
 ```bash
@@ -111,13 +133,16 @@ vava-catalogo/
 │       └── app.js             # Rotas e páginas da loja
 ├── services/
 │   ├── _lib/micro.js          # Base comum (HTTP, rotas, JSON, CORS)
+│   ├── Dockerfile             # Imagem genérica (build-arg SERVICO)
 │   ├── gateway/server.js      # :3000
 │   ├── clientes/server.js     # :3001
 │   ├── catalogo/server.js     # :3002
 │   ├── estoque/server.js      # :3003
 │   ├── tributario/server.js   # :3004
 │   ├── pedidos/server.js      # :3005
-│   └── start-all.js           # Sobe tudo em desenvolvimento
+│   └── start-all.js           # Sobe tudo em desenvolvimento (sem Docker)
+├── Dockerfile.loja            # Loja servida pelo nginx
+├── docker-compose.yml         # Orquestra loja + gateway + 5 serviços
 └── package.json               # Apenas scripts (zero dependências)
 ```
 
