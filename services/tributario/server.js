@@ -23,12 +23,35 @@ const ICMS_INTERNO_PADRAO = 18;
 // destino é Norte/Nordeste/Centro-Oeste/ES; 12% nos demais casos.
 const SUL_SUDESTE = new Set(['SP', 'RJ', 'MG', 'PR', 'SC', 'RS']);
 
-// IPI por capítulo do NCM (2 primeiros dígitos) — recorte didático.
+// IPI por POSIÇÃO do NCM (4 primeiros dígitos) — mais preciso que o capítulo.
+const IPI_POR_POSICAO = {
+  '0901': 0,   // café
+  '2201': 4,   // águas
+  '4802': 5,   // papel
+  '8205': 8,   // ferramentas manuais
+  '8414': 8,   // ventiladores/microventiladores
+  '8471': 0,   // informática
+  '8507': 8,   // baterias e acumuladores
+  '8512': 10,  // equipamentos elétricos automotivos
+  '8517': 10,  // telefonia
+  '8518': 15,  // áudio (fones, alto-falantes)
+  '8528': 15,  // monitores
+  '8536': 10,  // interruptores, botões, relés, conectores
+  '8539': 12,  // lâmpadas e LED
+  '8544': 5,   // fios e chicotes elétricos
+  '8708': 5,   // autopeças (partes de veículos)
+  '9401': 5,   // assentos
+  '9403': 5,   // móveis
+  '9608': 10,  // canetas
+};
+// Fallback por capítulo (2 primeiros dígitos) quando a posição não está na tabela.
 const IPI_POR_CAPITULO = {
   '22': 4,   // bebidas
   '48': 5,   // papel
+  '82': 8,   // ferramentas
   '84': 0,   // máquinas e equipamentos de informática
   '85': 15,  // eletroeletrônicos
+  '87': 5,   // veículos e autopeças
   '94': 5,   // móveis
   '96': 10,  // canetas e artigos diversos
 };
@@ -46,9 +69,16 @@ function aliquotaICMS(ufOrigem, ufDestino) {
   return { aliquota, operacao: 'interestadual' };
 }
 
+// Resolve a alíquota de IPI pelo NCM: posição (4 díg.) → capítulo (2 díg.) →
+// padrão 0. Informa a origem da alíquota e se o NCM é válido (8 dígitos).
 function aliquotaIPI(ncm) {
-  const capitulo = String(ncm || '').replace(/\D/g, '').slice(0, 2);
-  return IPI_POR_CAPITULO[capitulo] ?? 0;
+  const digitos = String(ncm || '').replace(/\D/g, '');
+  const ncmValido = digitos.length === 8;
+  const posicao = digitos.slice(0, 4);
+  const capitulo = digitos.slice(0, 2);
+  if (IPI_POR_POSICAO[posicao] != null) return { aliquota: IPI_POR_POSICAO[posicao], origem: 'posicao', ncmValido };
+  if (IPI_POR_CAPITULO[capitulo] != null) return { aliquota: IPI_POR_CAPITULO[capitulo], origem: 'capitulo', ncmValido };
+  return { aliquota: 0, origem: 'padrao', ncmValido };
 }
 
 const round2 = (v) => Math.round(v * 100) / 100;
@@ -59,14 +89,14 @@ function calcularItem(item, ufOrigem, ufDestino) {
   const base = round2(quantidade * valorUnitario);
 
   const icmsInfo = aliquotaICMS(ufOrigem, ufDestino);
-  const ipiAliq = aliquotaIPI(item.ncm);
+  const ipiInfo = aliquotaIPI(item.ncm);
 
   const icms = round2(base * icmsInfo.aliquota / 100);
-  const ipi = round2(base * ipiAliq / 100);
+  const ipi = round2(base * ipiInfo.aliquota / 100);
   const pis = round2(base * PIS / 100);
   const cofins = round2(base * COFINS / 100);
 
-  return {
+  const resultado = {
     sku: item.sku || '',
     ncm: item.ncm || '',
     quantidade,
@@ -74,12 +104,18 @@ function calcularItem(item, ufOrigem, ufDestino) {
     base,
     impostos: {
       icms: { aliquota: icmsInfo.aliquota, operacao: icmsInfo.operacao, valor: icms },
-      ipi: { aliquota: ipiAliq, valor: ipi },
+      ipi: { aliquota: ipiInfo.aliquota, origem: ipiInfo.origem, valor: ipi },
       pis: { aliquota: PIS, valor: pis },
       cofins: { aliquota: COFINS, valor: cofins },
     },
     totalImpostos: round2(icms + ipi + pis + cofins),
   };
+  if (!ipiInfo.ncmValido) {
+    resultado.aviso = item.ncm
+      ? `NCM "${item.ncm}" inválido (esperado 8 dígitos) — IPI ${ipiInfo.origem === 'padrao' ? 'padrão' : 'por ' + ipiInfo.origem} aplicado.`
+      : 'Item sem NCM — IPI padrão (0%) aplicado. Cadastre o NCM para um cálculo mais preciso.';
+  }
+  return resultado;
 }
 
 createService({
@@ -93,6 +129,7 @@ createService({
         observacao: 'Tabelas simplificadas para fins didáticos.',
         icmsInterno: ICMS_INTERNO,
         icmsInterestadual: { sulSudesteParaDemais: 7, demaisCasos: 12 },
+        ipiPorPosicaoNcm: IPI_POR_POSICAO,
         ipiPorCapituloNcm: IPI_POR_CAPITULO,
         pis: PIS,
         cofins: COFINS,

@@ -29,6 +29,22 @@ const MARCAS = {
   honda: 'Honda', nissan: 'Nissan', hyundai: 'Hyundai/Kia', peugeot: 'Peugeot', outros: 'Outros',
 };
 
+// NCM padrão por categoria do painel (o painel não traz NCM). Valores
+// didáticos plausíveis — confira com seu contador antes de faturar.
+const NCM_POR_CATEGORIA = {
+  botoes: '8536.50.90',      // interruptores e comutadores
+  micro: '8414.59.90',       // ventiladores
+  chicotes: '8544.30.00',    // jogos de fios para veículos
+  led: '8539.52.00',         // lâmpadas LED
+  maq: '8708.29.99',         // partes de carroceria (máq. de vidro)
+  conectores: '8536.90.90',  // conectores elétricos
+  ferramentas: '8205.40.00', // ferramentas manuais
+  estribos: '8708.29.99',    // partes/acessórios de carroceria
+  automotivo: '8708.99.90',  // autopeças diversas
+  reles: '8536.41.00',       // relés p/ tensão <= 60V
+  baterias: '8507.10.10',    // acumuladores de chumbo
+};
+
 function extrairProdutos(arquivo) {
   const src = fs.readFileSync(arquivo, 'utf8');
   if (arquivo.endsWith('.json')) return JSON.parse(src);
@@ -45,7 +61,7 @@ function mapear(painel) {
       nome: p.n,
       categoria: CATEGORIAS[p.c] || p.c || 'Outros',
       unidade: 'un',
-      ncm: '',
+      ncm: NCM_POR_CATEGORIA[p.c] || '',
       precoVenda: 0, // o painel de orçamento não traz preço: definir no ERP
       descricao: [p.r ? `Ref. ${p.r}` : '', p.sc ? `Marca: ${MARCAS[p.sc] || p.sc}` : '']
         .filter(Boolean).join(' · '),

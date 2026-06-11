@@ -74,7 +74,13 @@ const round2 = (v) => Math.round(v * 100) / 100;
 // Réplica didática do motor tributário (mesmas tabelas do serviço).
 const ICMS_INTERNO = { BA: 20.5, MG: 18, PR: 19.5, RJ: 22, RS: 17, SC: 17, SP: 18 };
 const SUL_SUDESTE = new Set(['SP', 'RJ', 'MG', 'PR', 'SC', 'RS']);
-const IPI = { 22: 4, 48: 5, 84: 0, 85: 15, 94: 5, 96: 10 };
+// IPI por posição do NCM (4 díg.) com fallback por capítulo — espelha o serviço tributário.
+const IPI_POSICAO = {
+  '0901': 0, '2201': 4, '4802': 5, '8205': 8, '8414': 8, '8471': 0, '8507': 8,
+  '8512': 10, '8517': 10, '8518': 15, '8528': 15, '8536': 10, '8539': 12,
+  '8544': 5, '8708': 5, '9401': 5, '9403': 5, '9608': 10,
+};
+const IPI_CAPITULO = { 22: 4, 48: 5, 82: 8, 84: 0, 85: 15, 87: 5, 94: 5, 96: 10 };
 
 function demoCalcular({ ufOrigem = 'SP', ufDestino, itens }) {
   const calc = itens.map((i) => {
@@ -89,7 +95,8 @@ function demoCalcular({ ufOrigem = 'SP', ufDestino, itens }) {
       icmsAliq = SUL_SUDESTE.has(ufOrigem) && favorecido ? 7 : 12;
       operacao = 'interestadual';
     }
-    const ipiAliq = IPI[String(i.ncm || '').replace(/\D/g, '').slice(0, 2)] ?? 0;
+    const dig = String(i.ncm || '').replace(/\D/g, '');
+    const ipiAliq = IPI_POSICAO[dig.slice(0, 4)] ?? IPI_CAPITULO[dig.slice(0, 2)] ?? 0;
     const impostos = {
       icms: { aliquota: icmsAliq, operacao, valor: round2(base * icmsAliq / 100) },
       ipi: { aliquota: ipiAliq, valor: round2(base * ipiAliq / 100) },
