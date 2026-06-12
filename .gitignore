@@ -3,3 +3,6 @@ services/*/data/
 
 node_modules/
 .DS_Store
+
+# Configuração local (portas, credenciais de produção)
+.env
