@@ -1,0 +1,8 @@
+# Bancos de dados locais dos microserviços (gerados em tempo de execução)
+services/*/data/
+
+node_modules/
+.DS_Store
+
+# Configuração local (portas, credenciais de produção)
+.env

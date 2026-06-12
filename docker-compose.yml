@@ -1,0 +1,138 @@
+# Vava Store — loja + microserviços em containers.
+#
+#   docker compose up --build
+#
+#   Loja ........ http://localhost:8080
+#   Gateway ..... http://localhost:3000  (único serviço exposto ao navegador)
+#
+# Cada microserviço roda no seu próprio container e conversa pelos nomes da
+# rede interna do compose (http://clientes:3001, http://estoque:3003, ...).
+# Os bancos JSON ficam em volumes nomeados — os dados sobrevivem ao recreate.
+
+services:
+  loja:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile.loja
+    ports:
+      # Porta ocupada? Suba com outra: LOJA_PORT=8090 docker compose up -d
+      - "${LOJA_PORT:-8080}:80"
+    depends_on:
+      - gateway
+
+  gateway:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args: { SERVICO: gateway, PORTA: "3000" }
+    ports:
+      - "${GATEWAY_PORT:-3000}:3000"
+    environment:
+      CLIENTES_URL: http://clientes:3001
+      CATALOGO_URL: http://catalogo:3002
+      ESTOQUE_URL: http://estoque:3003
+      TRIBUTARIO_URL: http://tributario:3004
+      PEDIDOS_URL: http://pedidos:3005
+      MARKETPLACES_URL: http://marketplaces:3006
+      USUARIOS_URL: http://usuarios:3007
+      # Produção: restrinja às origens reais (https://loja.suaempresa.com,...)
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
+      RATE_LIMIT_RPM: ${RATE_LIMIT_RPM:-300}
+    depends_on:
+      - clientes
+      - catalogo
+      - estoque
+      - tributario
+      - pedidos
+      - marketplaces
+      - usuarios
+
+  clientes:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args: { SERVICO: clientes, PORTA: "3001" }
+    volumes:
+      - clientes-data:/app/services/clientes/data
+
+  catalogo:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args: { SERVICO: catalogo, PORTA: "3002" }
+    volumes:
+      - catalogo-data:/app/services/catalogo/data
+
+  estoque:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args: { SERVICO: estoque, PORTA: "3003" }
+    volumes:
+      - estoque-data:/app/services/estoque/data
+
+  tributario:
+    # Stateless: só calcula impostos, não tem volume.
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args: { SERVICO: tributario, PORTA: "3004" }
+
+  pedidos:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args: { SERVICO: pedidos, PORTA: "3005" }
+    environment:
+      ESTOQUE_URL: http://estoque:3003
+      TRIBUTARIO_URL: http://tributario:3004
+    volumes:
+      - pedidos-data:/app/services/pedidos/data
+    depends_on:
+      - estoque
+      - tributario
+
+  marketplaces:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args: { SERVICO: marketplaces, PORTA: "3006" }
+    environment:
+      CATALOGO_URL: http://catalogo:3002
+      PEDIDOS_URL: http://pedidos:3005
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-}
+    volumes:
+      - marketplaces-data:/app/services/marketplaces/data
+    depends_on:
+      - catalogo
+      - pedidos
+
+  usuarios:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+      args: { SERVICO: usuarios, PORTA: "3007" }
+    environment:
+      # Produção: defina credenciais próprias no .env / secrets
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@vava.com}
+      ADMIN_SENHA: ${ADMIN_SENHA:-admin123}
+      SESSAO_HORAS: ${SESSAO_HORAS:-8}
+    volumes:
+      - usuarios-data:/app/services/usuarios/data
+
+volumes:
+  clientes-data:
+  catalogo-data:
+  estoque-data:
+  pedidos-data:
+  marketplaces-data:
+  usuarios-data:

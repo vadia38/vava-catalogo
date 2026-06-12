@@ -1,0 +1,21 @@
+{
+  "name": "vava-catalogo",
+  "version": "1.0.0",
+  "description": "E-commerce Vava Store + microserviços de integração com o Vava ERP (Node.js puro, sem dependências).",
+  "type": "module",
+  "scripts": {
+    "start": "node services/start-all.js",
+    "servico:clientes": "node services/clientes/server.js",
+    "servico:catalogo": "node services/catalogo/server.js",
+    "servico:estoque": "node services/estoque/server.js",
+    "servico:tributario": "node services/tributario/server.js",
+    "servico:pedidos": "node services/pedidos/server.js",
+    "servico:marketplaces": "node services/marketplaces/server.js",
+    "servico:usuarios": "node services/usuarios/server.js",
+    "servico:gateway": "node services/gateway/server.js",
+    "loja": "python3 -m http.server 8080"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

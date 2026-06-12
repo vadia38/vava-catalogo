@@ -1,0 +1,242 @@
+/* Vava Store — estética Luretec (painel de orçamento www.luretec.com.br/orcamento):
+   fundo azul-marinho profundo, destaque ciano #4FC3F7, logo redondo com brilho,
+   categorias em maiúsculas e botão de compra verde. */
+
+:root {
+  --bg: #0B1121;
+  --bg-2: #151C2C;
+  --bg-3: #1A2540;
+  --header: #0D1425;
+  --border: #1E2A3E;
+  --border-2: #1A2540;
+  --text: #C8D0E0;
+  --bright: #E8ECF4;
+  --muted: #8B95B0;
+  --muted-2: #5C6B8A;
+  --accent: #4FC3F7;
+  --accent-2: #0288D1;
+  --green: #10B981;
+  --red: #F87171;
+  --amber: #FBBF24;
+  --radius: 8px;
+  --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+a { color: var(--accent); text-decoration: none; }
+button { font: inherit; cursor: pointer; }
+input, select {
+  font: inherit;
+  background: #141D30;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  width: 100%;
+}
+input:focus, select:focus { outline: none; border-color: var(--accent); }
+label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 4px; }
+
+.muted { color: var(--muted); }
+.mono { font-family: var(--mono); }
+h1, h2, h3 { color: var(--bright); }
+
+/* ---------- Topbar ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 20px;
+  background: var(--header);
+  border-bottom: 1px solid var(--border-2);
+}
+.brand { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.brand-mark {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff; font-weight: 900; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  animation: logoGlow 3s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes logoGlow {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(79, 195, 247, 0.55)) drop-shadow(0 0 14px rgba(79, 195, 247, 0.35)); }
+  50% { filter: drop-shadow(0 0 2px rgba(79, 195, 247, 0.30)) drop-shadow(0 0 6px rgba(79, 195, 247, 0.15)); }
+}
+.brand-name { font-weight: 800; font-size: 16px; color: var(--bright); letter-spacing: -0.3px; }
+.brand-sub { font-size: 11px; color: var(--muted-2); }
+
+.search { flex: 1; max-width: 420px; min-width: 180px; font-size: 13px; }
+.topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+.btn {
+  border: 1px solid var(--border);
+  background: #141D30;
+  color: var(--text);
+  border-radius: 6px;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: border-color 0.15s, opacity 0.15s;
+}
+.btn:hover { border-color: var(--accent); }
+.btn-primary {
+  background: var(--green); border-color: var(--green); color: #fff;
+  text-transform: uppercase; letter-spacing: 0.5px; font-size: 12px; font-weight: 800;
+}
+.btn-primary:hover { opacity: 0.85; border-color: var(--green); }
+.btn-ghost { background: transparent; }
+.btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 4px; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.cart-btn { position: relative; }
+.cart-badge {
+  position: absolute; top: -7px; right: -7px;
+  background: var(--green); color: #fff;
+  font-size: 11px; font-weight: 800;
+  border-radius: 999px; min-width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center; padding: 0 4px;
+}
+
+/* ---------- Status da integração ---------- */
+.conn {
+  font-size: 11px; font-family: var(--mono);
+  padding: 4px 10px; border-radius: 4px;
+  border: 1px solid var(--border); white-space: nowrap;
+  background: transparent; color: var(--muted-2);
+}
+.conn.on { color: var(--green); border-color: rgba(16, 185, 129, 0.4); }
+.conn.off { color: var(--amber); border-color: rgba(251, 191, 36, 0.4); }
+
+/* ---------- Layout ---------- */
+.page { max-width: 1280px; margin: 0 auto; padding: 24px 20px 80px; }
+.page-title { font-size: 20px; margin: 0 0 4px; }
+.page-sub { color: var(--muted); margin: 0 0 22px; font-size: 13.5px; }
+
+.hero {
+  border: 1px solid var(--border-2);
+  background: linear-gradient(135deg, rgba(79, 195, 247, 0.08), rgba(2, 136, 209, 0.04)), var(--header);
+  border-radius: var(--radius);
+  padding: 26px;
+  margin-bottom: 24px;
+}
+.hero h1 { margin: 0 0 6px; font-size: 24px; }
+.hero p { margin: 0; color: var(--muted); font-size: 14px; }
+.hero .tag { font-family: var(--mono); font-size: 11.5px; color: var(--accent); }
+
+/* Abas de categoria (estilo cat-tab do painel Luretec) */
+.chips { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 20px; }
+.chip {
+  border: 1px solid transparent; background: transparent; color: var(--muted-2);
+  border-radius: 4px; padding: 6px 14px;
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;
+  white-space: nowrap; transition: all 0.15s;
+}
+.chip:hover { color: var(--text); background: #141D30; }
+.chip.active { background: var(--bg-3); border-color: var(--accent); color: #fff; font-weight: 800; letter-spacing: 0.5px; }
+
+/* ---------- Grid de produtos ---------- */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+
+.card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.card:hover { border-color: rgba(79, 195, 247, 0.5); box-shadow: 0 0 20px rgba(79, 195, 247, 0.08); }
+
+.card-thumb {
+  height: 150px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 48px;
+  background: #FFFFFF;
+}
+.card-foto { width: 100%; height: 100%; object-fit: contain; background: #fff; display: block; padding: 6px; }
+.card-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
+.card-cat { font-size: 10.5px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.4px; }
+.card-name { font-weight: 700; font-size: 13.5px; color: var(--bright); line-height: 1.35; }
+.card-desc { font-size: 12px; color: var(--muted); flex: 1; line-height: 1.35; }
+.card-price { font-size: 17px; font-weight: 800; color: var(--accent); }
+.card-stock { font-size: 11px; font-family: var(--mono); }
+.in-stock { color: var(--green); }
+.low-stock { color: var(--amber); }
+.no-stock { color: var(--red); }
+
+/* ---------- Painéis / formulários ---------- */
+.panel {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.panel h3 { margin: 0 0 14px; font-size: 15px; }
+.row { display: flex; gap: 14px; flex-wrap: wrap; }
+.row > * { flex: 1; min-width: 140px; }
+.split { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; align-items: start; }
+@media (max-width: 800px) { .split { grid-template-columns: 1fr; } }
+
+/* ---------- Tabelas ---------- */
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th { text-align: left; color: var(--muted-2); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+th, td { padding: 10px 8px; border-bottom: 1px solid var(--border); }
+tr:last-child td { border-bottom: none; }
+td.num, th.num { text-align: right; font-family: var(--mono); }
+
+.qty { display: inline-flex; align-items: center; gap: 6px; }
+.qty button { width: 26px; height: 26px; border-radius: 4px; border: 1px solid var(--border); background: #141D30; color: var(--text); font-weight: 700; }
+.qty button:hover { border-color: var(--accent); }
+.qty span { min-width: 24px; text-align: center; font-family: var(--mono); }
+
+.total-line { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13.5px; }
+.total-line.big { font-size: 18px; font-weight: 800; color: var(--bright); border-top: 1px solid var(--border); margin-top: 8px; padding-top: 12px; }
+
+.badge {
+  display: inline-block; padding: 3px 10px; border-radius: 4px;
+  font-size: 11px; font-weight: 700; font-family: var(--mono); text-transform: uppercase;
+}
+.badge.confirmado { background: rgba(16, 185, 129, 0.15); color: var(--green); }
+.badge.enviado { background: rgba(79, 195, 247, 0.15); color: var(--accent); }
+.badge.entregue { background: rgba(129, 140, 248, 0.18); color: #A5B4FC; }
+.badge.cancelado { background: rgba(248, 113, 113, 0.15); color: var(--red); }
+
+/* ---------- Toast / avisos ---------- */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--bg-3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 22px; z-index: 100;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  animation: pop 0.18s ease-out;
+  font-size: 13.5px;
+}
+.toast.success { border-color: var(--green); }
+.toast.error { border-color: var(--red); }
+@keyframes pop { from { opacity: 0; transform: translate(-50%, 8px); } }
+
+.notice {
+  border: 1px dashed var(--amber); background: rgba(251, 191, 36, 0.06);
+  color: var(--amber); border-radius: 6px; padding: 10px 16px;
+  font-size: 12.5px; margin-bottom: 18px;
+}
+
+.empty { text-align: center; color: var(--muted); padding: 60px 0; }
+.empty .icon { font-size: 50px; margin-bottom: 10px; }
+
+.footer {
+  border-top: 1px solid var(--border-2);
+  background: var(--header);
+  text-align: center; color: var(--muted-2);
+  font-size: 11.5px; font-family: var(--mono);
+  padding: 20px; margin-top: 40px;
+}
